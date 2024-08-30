@@ -1,8 +1,8 @@
 pipeline {
-    agent { label 'docker-node' }
+    agent { label 'jenkins-vps' }
     environment {
         // Define Docker registry URL and image name
-        DOCKER_REGISTRY = 'https://your-nexus-repository-url'
+        DOCKER_REGISTRY = 'http://178.16.137.170:8081/'
         IMAGE_NAME = 'eigennspace/test-cicd-springboot'
     }
     stages {
@@ -33,7 +33,7 @@ pipeline {
             steps {
                 script {
                     // Push the Docker image to Nexus using stored credentials
-                    docker.withRegistry("${DOCKER_REGISTRY}", 'nexus-credentials-id') {
+                    docker.withRegistry("${DOCKER_REGISTRY}", 'nexus-credentials') {
                         def app = docker.image("${IMAGE_NAME}:${env.BUILD_ID}")
                         app.push()
                         // Optionally, push the 'latest' tag
