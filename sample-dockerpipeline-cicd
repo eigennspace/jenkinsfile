@@ -24,9 +24,8 @@ pipeline {
         stage('Extract Version') {
             steps {
                 script {
-                    // Extract the version from the pom.xml
-                    def pom = readMavenPom file: 'pom.xml'
-                    env.SEMVER_TAG = pom.version
+                    // Extract the version from the pom.xml using a shell command
+                    env.SEMVER_TAG = sh(script: "mvn help:evaluate -Dexpression=project.version -q -DforceStdout", returnStdout: true).trim()
                     echo "Version extracted: ${env.SEMVER_TAG}"
                 }
             }
