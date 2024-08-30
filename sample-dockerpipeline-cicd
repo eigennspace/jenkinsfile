@@ -21,11 +21,21 @@ pipeline {
                 }
             }
         }
+        stage('Extract Version') {
+            steps {
+                script {
+                    // Extract the version from the pom.xml
+                    def pom = readMavenPom file: 'pom.xml'
+                    env.SEMVER_TAG = pom.version
+                    echo "Version extracted: ${env.SEMVER_TAG}"
+                }
+            }
+        }
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Build the Docker image and tag it with the build ID
-                    def app = docker.build("${IMAGE_NAME}:${env.BUILD_ID}")
+                    // Build the Docker image and tag it with the semver
+                    def app = docker.build("${IMAGE_NAME}:${env.SEMVER_TAG}")
                 }
             }
         }
@@ -34,7 +44,7 @@ pipeline {
                 script {
                     // Push the Docker image to Nexus using stored credentials
                     docker.withRegistry("${DOCKER_REGISTRY}", 'nexus-credentials') {
-                        def app = docker.image("${IMAGE_NAME}:${env.BUILD_ID}")
+                        def app = docker.image("${IMAGE_NAME}:${env.SEMVER_TAG}")
                         app.push()
                         // Optionally, push the 'latest' tag
                         app.push('latest')
