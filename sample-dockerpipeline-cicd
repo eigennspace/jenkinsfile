@@ -1,7 +1,6 @@
 pipeline {
     agent { label 'jenkins-vps' }
     environment {
-        // Define Docker registry URL and image name
         DOCKER_REGISTRY = 'http://178.16.137.170:8083/repository/docker-repo/'
         IMAGE_NAME = 'eigennspace/test-cicd-springboot'
     }
@@ -24,7 +23,6 @@ pipeline {
         stage('Extract Version') {
             steps {
                 script {
-                    // Extract the version from the pom.xml using a shell command
                     env.SEMVER_TAG = sh(script: "mvn help:evaluate -Dexpression=project.version -q -DforceStdout", returnStdout: true).trim()
                     echo "Version extracted: ${env.SEMVER_TAG}"
                 }
@@ -33,7 +31,6 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Build the Docker image and tag it with the semver
                     def app = docker.build("${IMAGE_NAME}:${env.SEMVER_TAG}")
                 }
             }
@@ -41,13 +38,21 @@ pipeline {
         stage('Push Docker Image to Nexus') {
             steps {
                 script {
-                    // Push the Docker image to Nexus using stored credentials
                     docker.withRegistry("${DOCKER_REGISTRY}", 'nexus-credentials') {
                         def app = docker.image("${IMAGE_NAME}:${env.SEMVER_TAG}")
                         app.push()
-                        // Optionally, push the 'latest' tag
                         app.push('latest')
                     }
+                }
+            }
+        }
+        stage('Clean Up Docker Images On Host') {
+            steps {
+                script {
+                    // Remove images by tag
+                    sh "docker image rm ${DOCKER_REGISTRY}${IMAGE_NAME}:${env.SEMVER_TAG}"
+                    sh "docker image rm ${DOCKER_REGISTRY}${IMAGE_NAME}:latest"
+                    sh "docker image rm ${IMAGE_NAME}:${env.SEMVER_TAG}"
                 }
             }
         }
