@@ -1,0 +1,37 @@
+pipeline {
+    agent { label 'jenkins-vps' }
+    stages {
+        stage('Checkout') {
+            steps {
+                // Checkout the code from the Git repository
+                git branch: 'main', url: 'https://github.com/eigennspace/test-cicd-springboot'
+            }
+        }
+        stage('Build') {
+            steps {
+                // Provide the settings.xml and settings-security.xml files
+                configFileProvider([
+                    configFile(fileId: 'settings-security.xml', variable: 'SETTINGS_SECURITY_FILE'),
+                    configFile(fileId: 'settings.xml', variable: 'SETTINGS_FILE')
+                ]) {
+                    // Execute Maven with the provided settings files
+                    sh 'mvn clean install --settings $SETTINGS_FILE -Dsettings.security=$SETTINGS_SECURITY_FILE'
+                }
+            }
+        }
+        stage('Publish To Nexus') {
+            steps {
+                // Provide the settings.xml and settings-security.xml files
+                configFileProvider([
+                    configFile(fileId: 'settings-security.xml', variable: 'SETTINGS_SECURITY_FILE'),
+                    configFile(fileId: 'settings.xml', variable: 'SETTINGS_FILE')
+                ]) {
+                    // Execute Maven with the provided settings files
+                    sh 'mvn clean deploy --settings $SETTINGS_FILE -Dsettings.security=$SETTINGS_SECURITY_FILE'
+                }
+                
+                cleanWs()
+            }
+        }
+    }
+}
