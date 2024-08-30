@@ -1,0 +1,51 @@
+pipeline {
+    agent { label 'docker-node' }
+    environment {
+        // Define Docker registry URL and image name
+        DOCKER_REGISTRY = 'https://your-nexus-repository-url'
+        IMAGE_NAME = 'eigennspace/test-cicd-springboot'
+    }
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/eigennspace/test-cicd-springboot'
+            }
+        }
+        stage('Build with Maven') {
+            steps {
+                configFileProvider([
+                    configFile(fileId: 'settings-security.xml', variable: 'SETTINGS_SECURITY_FILE'),
+                    configFile(fileId: 'settings.xml', variable: 'SETTINGS_FILE')
+                ]) {
+                    sh 'mvn clean install -Dsettings.security=$SETTINGS_SECURITY_FILE --settings $SETTINGS_FILE'
+                }
+            }
+        }
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    // Build the Docker image and tag it with the build ID
+                    def app = docker.build("${IMAGE_NAME}:${env.BUILD_ID}")
+                }
+            }
+        }
+        stage('Push Docker Image to Nexus') {
+            steps {
+                script {
+                    // Push the Docker image to Nexus using stored credentials
+                    docker.withRegistry("${DOCKER_REGISTRY}", 'nexus-credentials-id') {
+                        def app = docker.image("${IMAGE_NAME}:${env.BUILD_ID}")
+                        app.push()
+                        // Optionally, push the 'latest' tag
+                        app.push('latest')
+                    }
+                }
+            }
+        }
+        stage('Clean Workspace') {
+            steps {
+                cleanWs()
+            }
+        }
+    }
+}
