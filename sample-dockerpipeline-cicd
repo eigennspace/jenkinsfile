@@ -17,7 +17,7 @@ pipeline {
                     configFile(fileId: 'settings-security.xml', variable: 'SETTINGS_SECURITY_FILE'),
                     configFile(fileId: 'settings.xml', variable: 'SETTINGS_FILE')
                 ]) {
-                    sh 'mvn clean install -Dsettings.security=$SETTINGS_SECURITY_FILE --settings $SETTINGS_FILE'
+                    sh 'mvn clean install deploy -Dsettings.security=$SETTINGS_SECURITY_FILE --settings $SETTINGS_FILE'
                 }
             }
         }
