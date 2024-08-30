@@ -1,5 +1,5 @@
 pipeline {
-    agent { label 'jenkins-vps' }
+    agent { label 'docker-node' }
     stages {
         stage('Checkout') {
             steps {
