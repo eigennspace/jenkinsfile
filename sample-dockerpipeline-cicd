@@ -1,7 +1,8 @@
 pipeline {
     agent { label 'jenkins-vps' }
     environment {
-        DOCKER_REGISTRY = 'http://178.16.137.170:8083/repository/docker-repo/'
+        DOCKER_REGISTRY_HOST = '178.16.137.170:8083/'
+        DOCKER_REGISTRY_PATH = 'repository/docker-repo/'
         IMAGE_NAME = 'eigennspace/test-cicd-springboot'
     }
     stages {
@@ -38,7 +39,7 @@ pipeline {
         stage('Push Docker Image to Nexus') {
             steps {
                 script {
-                    docker.withRegistry("${DOCKER_REGISTRY}", 'nexus-credentials') {
+                    docker.withRegistry("${DOCKER_REGISTRY_HOST}${DOCKER_REGISTRY_PATH}", 'nexus-credentials') {
                         def app = docker.image("${IMAGE_NAME}:${env.SEMVER_TAG}")
                         app.push()
                         app.push('latest')
@@ -50,8 +51,8 @@ pipeline {
             steps {
                 script {
                     // Remove images by tag
-                    sh "docker image rm ${DOCKER_REGISTRY}${IMAGE_NAME}:${env.SEMVER_TAG}"
-                    sh "docker image rm ${DOCKER_REGISTRY}${IMAGE_NAME}:latest"
+                    sh "docker image rm ${DOCKER_REGISTRY_HOST}${IMAGE_NAME}:${env.SEMVER_TAG}"
+                    sh "docker image rm ${DOCKER_REGISTRY_HOST}${IMAGE_NAME}:latest"
                     sh "docker image rm ${IMAGE_NAME}:${env.SEMVER_TAG}"
                 }
             }
