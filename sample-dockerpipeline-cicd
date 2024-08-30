@@ -2,7 +2,7 @@ pipeline {
     agent { label 'jenkins-vps' }
     environment {
         // Define Docker registry URL and image name
-        DOCKER_REGISTRY = 'http://178.16.137.170:8081/'
+        DOCKER_REGISTRY = 'localhost:8083/repository/docker-repository/'
         IMAGE_NAME = 'eigennspace/test-cicd-springboot'
     }
     stages {
