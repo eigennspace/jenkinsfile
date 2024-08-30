@@ -39,7 +39,7 @@ pipeline {
         stage('Push Docker Image to Nexus') {
             steps {
                 script {
-                    docker.withRegistry("${DOCKER_REGISTRY_HOST}${DOCKER_REGISTRY_PATH}", 'nexus-credentials') {
+                    docker.withRegistry("http://${DOCKER_REGISTRY_HOST}${DOCKER_REGISTRY_PATH}", 'nexus-credentials') {
                         def app = docker.image("${IMAGE_NAME}:${env.SEMVER_TAG}")
                         app.push()
                         app.push('latest')
